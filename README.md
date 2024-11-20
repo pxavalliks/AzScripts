@@ -1,8 +1,7 @@
 # Automating Azure SQL Database Backups with Linux: A Step-by-Step Guide
 
 In this post, I’ll walk you through the process of automating SQL database backups in Azure, using Linux bash scripting. This includes connecting to an Azure SQL Database, exporting the database to a .bacpac file, and uploading it to an Azure Storage account for safe keeping. 
-
-You need to install the az cli and sqlpackage to run this script
+Note: az cli and sqlpackage should be installed as a pre-requisite
 
 ## Create an Azure SQL Database
 #### Login to Azure CLI:
