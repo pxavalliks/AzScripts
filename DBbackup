@@ -1,0 +1,35 @@
+# Automating Azure SQL Database Backups with Linux: A Step-by-Step Guide
+
+## If you found this repo useful, give it a STAR 🌠
+
+Description: 
+In this post, I’ll walk you through the process of automating SQL database backups in Azure, using Linux bash scripting. This includes connecting to an Azure SQL Database, exporting the database to a .bacpac file, and uploading it to an Azure Storage account for safe keeping. 
+
+
+## Bash Script:
+
+### Set Up Variables: Define the Key Vault, SQL server, database name, storage account, and other parameters.
+KEYVAULT="SecureKeys"
+DB_SERVER="sqlserver4523.database.windows.net"
+DB_NAME="appdb"
+STORAGE_ACCOUNT="shellaccount6754"
+CONTAINER="data"
+BCKP_FILE="/tmp/backup_$(date +%F).bacpac"
+
+### Retrieve Credentials from Key Vault: Use Azure CLI to securely fetch the SQL DB credentials and storage account keys from Azure Key Vault.
+DB_USER=$(az keyvault secret show --name "sqlusr" --vault-name "$KEYVAULT" --query value -o tsv)
+DB_PASS=$(az keyvault secret show --name "sqlpw" --vault-name "$KEYVAULT" --query value -o tsv)
+STORAGE_KEY=$(az keyvault secret show --name "storagekey" --vault-name "$KEYVAULT" --query value -o tsv)
+
+### Export SQL Database: Use sqlpackage to export the database to a .bacpac file.
+sqlpackage /a:Export \
+/scs:"Server=tcp:$DB_SERVER,1433;Initial Catalog=$DB_NAME;User_ID=$DB_USER;Password=$DB_PASS;" \
+/tf:"$BCKP_FILE"
+
+### Upload to Azure Storage: Upload the .bacpac file to an Azure Blob Storage container.
+az storage blob upload --acount-name "$STORAGE_ACCOUNT" --account-key "$STORAGE_KEY" --container-name "$CONTAINER" \
+--file "$BCKP_FILE" --name "$(basename $BCKP_FILE)"
+
+# Remove Local File: Clean up by removing the backup file from the local server after upload.
+rm -f "$BCKP_FILE"
+
